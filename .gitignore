@@ -1,2 +1,4 @@
 ./ch8
 roms/
+ch8-emu
+./run.sh

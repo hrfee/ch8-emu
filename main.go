@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"time"
 )
 
 var (
 	FILE  string
 	DEBUG bool
-	STEP  = 0
+	HZ    = 800
 	SCALE = 20
 	PAD   = 2
 )
@@ -25,12 +26,13 @@ func Println(a ...interface{}) {
 func main() {
 	flag.StringVar(&FILE, "file", FILE, "file to run")
 	flag.BoolVar(&DEBUG, "debug", DEBUG, "debug info")
-	flag.IntVar(&STEP, "step", STEP, "wait n ms between FDE cycles")
+	flag.IntVar(&HZ, "speed", HZ, "rough CPU speed in Hz.")
 	flag.IntVar(&SCALE, "scale", SCALE, "scale pixels by n")
 	flag.IntVar(&PAD, "pad", PAD, "pad (scaled) pixels with n pixels on each side")
 	flag.Parse()
 
-	m := newMachine(STEP, SCALE, PAD)
+	m := newMachine((1000000000*time.Nanosecond)/time.Duration(HZ), SCALE, PAD)
+	loadDefaultFont(m)
 
 	f, err := os.Open(FILE)
 	if err != nil {

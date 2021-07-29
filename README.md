@@ -1,9 +1,13 @@
 #### chip-8 emulator
 
-bare minimum chip-8 emulator. Currently only supports instructions necessary for the IBM Logo program. 
-
+bare minimum chip-8 emulator. Should support all instructions. Some programs don't work. No sound yet. Keypad uses normal layout:
 ```
-Usage of ./ch8:
+1234
+qwer
+asdf
+zxcv
+```
+Usage of ./ch8-emu:
   -debug
     	debug info
   -file string
@@ -12,8 +16,8 @@ Usage of ./ch8:
     	pad (scaled) pixels with n pixels on each side (default 2)
   -scale int
     	scale pixels by n (default 20)
-  -step int
-    	wait n ms between FDE cycles
+  -speed int
+    	rough CPU speed in Hz. (default 800)
 ```
 
 #### references
