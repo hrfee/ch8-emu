@@ -7,6 +7,8 @@ qwer
 asdf
 zxcv
 ```
+
+```
 Usage of ./ch8-emu:
   -debug
     	debug info

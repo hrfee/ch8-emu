@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/tfriedel6/canvas/sdlcanvas"
 	"github.com/veandco/go-sdl2/sdl"
@@ -58,6 +59,7 @@ type Keys struct {
 	pressed      map[uint8]bool
 	// The 4 bits of the key hexcode + (0xF0 if pressed, 0x00 if not).
 	presses chan byte
+	useChan bool
 }
 
 func newKeys() Keys {
@@ -197,7 +199,9 @@ func (m *Machine) draw() {
 		case k1, k2, k3, kC, k4, k5, k6, kD, k7, k8, k9, kE, kA, k0, kB, kF:
 			m.keys.pressedCount++
 			m.keys.pressed[codeToHex[scancode]] = true
-			m.keys.presses <- (byte(codeToHex[scancode]) + 0xF0)
+			if m.keys.useChan {
+				m.keys.presses <- (byte(codeToHex[scancode]) + 0xF0)
+			}
 		}
 	}
 	wnd.KeyUp = func(scancode int, rn rune, name string) {
@@ -205,12 +209,20 @@ func (m *Machine) draw() {
 		case k1, k2, k3, kC, k4, k5, k6, kD, k7, k8, k9, kE, kA, k0, kB, kF:
 			m.keys.pressedCount--
 			m.keys.pressed[codeToHex[scancode]] = false
-			m.keys.presses <- byte(codeToHex[scancode])
+			if m.keys.useChan {
+				m.keys.presses <- byte(codeToHex[scancode])
+			}
 		}
 		if m.keys.pressedCount < 0 {
 			panic(fmt.Errorf("Number of keys pressed was negative"))
 		}
 	}
+
+	go func() {
+		for range time.Tick(time.Second) {
+			fmt.Println("FPS:", wnd.FPS())
+		}
+	}()
 
 	defer wnd.Destroy()
 	wnd.MainLoop(func() {
@@ -230,4 +242,8 @@ func (m *Machine) draw() {
 			}
 		}
 	})
+}
+
+func (m *Machine) WriteDisplay(x, y int) {
+	m.Display[x][y] = !m.Display[x][y]
 }

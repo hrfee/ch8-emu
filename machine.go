@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"math/rand"
+	"os"
 	"time"
 )
 
@@ -21,6 +23,7 @@ type Machine struct {
 	I                  uint16
 	V                  [16]byte
 	Display            [w][h]bool
+	Canvas             chan [2]int
 	keys               Keys
 	scale              int
 	pad                int
@@ -47,6 +50,22 @@ func toOpcode(b [2]byte) opcode {
 	return opcode(b[1]) + (opcode(b[0]) << 8)
 }
 
+func (m *Machine) Load(f *os.File) {
+	off := int64(0)
+	ops := make([]byte, 1)
+	for {
+		_, err := f.ReadAt(ops, off)
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			panic(err)
+		}
+		m.Mem[off+0x200] = ops[0]
+		off++
+	}
+}
+
 func (m *Machine) Run() {
 	go m.draw()
 	go func() {
@@ -57,10 +76,6 @@ func (m *Machine) Run() {
 			if m.sound != 0 {
 				m.sound--
 			}
-		}
-	}()
-	go func() {
-		for range m.keys.presses {
 		}
 	}()
 	for {
@@ -441,7 +456,7 @@ func (m *Machine) Draw(xa, ya, rows int) {
 					continue
 				}
 				c := m.Display[x+xo][y+i]
-				m.Display[x+xo][y+i] = !c
+				m.WriteDisplay(x+xo, y+i)
 				if c {
 					m.V[15] = 1
 				}
@@ -471,12 +486,14 @@ func (m *Machine) SetSoundTimer(reg int) {
 // WaitForKey blocks until a key is pressed, then stores the hex value in V<X>.
 // FX0A
 func (m *Machine) WaitForKey(reg int) {
+	m.keys.useChan = true
 	for v := range m.keys.presses {
 		if v&0xF0 == 0xF0 {
 			m.V[reg] = v - 0xF0
 			break
 		}
 	}
+	m.keys.useChan = false
 }
 
 // GetFont stores in I the address of the character sprite corresponding to to the hex value stored in V<X>.

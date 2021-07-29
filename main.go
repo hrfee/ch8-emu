@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"io"
 	"os"
 	"time"
 )
@@ -39,19 +38,6 @@ func main() {
 		panic(err)
 	}
 	defer f.Close()
-	off := int64(0)
-	ops := make([]byte, 1)
-	for {
-		_, err := f.ReadAt(ops, off)
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			panic(err)
-		}
-		m.Mem[off+0x200] = ops[0]
-		off++
-
-	}
+	m.Load(f)
 	m.Run()
 }
